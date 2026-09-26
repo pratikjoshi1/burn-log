@@ -6,16 +6,19 @@
   --bg:#E9EDF2; --panel:#FFFFFF; --ink:#13203A; --muted:#5B6780; --line:#CBD3DE;
   --accent:#E5341D; --accent-ink:#FFFFFF; --soft:#DCE3EC; --good:#1E7A4C;
   box-sizing:border-box; --navh:64px;
+  --g-bg:#FFFFFF; --g-ink:#1F1F1F; --g-line:#747775;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#0F1726; --panel:#18223A; --ink:#E8EDF5; --muted:#93A0B8; --line:#2B3857;
     --accent:#FF5A3C; --accent-ink:#1A0A06; --soft:#222E4A; --good:#4CC38A; color-scheme:dark;
+    --g-bg:#131314; --g-ink:#E3E3E3; --g-line:#8E918F;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0F1726; --panel:#18223A; --ink:#E8EDF5; --muted:#93A0B8; --line:#2B3857;
   --accent:#FF5A3C; --accent-ink:#1A0A06; --soft:#222E4A; --good:#4CC38A; color-scheme:dark;
+  --g-bg:#131314; --g-ink:#E3E3E3; --g-line:#8E918F;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -241,6 +244,12 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
 .wt.ic[data-sync="err"]::after,.wt.ic[data-sync="pending"]::after{content:"";position:absolute;top:3px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
 .wt.ic[data-sync="ok"]::after{content:"";position:absolute;top:3px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--good)}
 .dh{font-weight:700;font-size:18px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:48px;margin-top:10px;border-radius:12px;
+  border:1px solid var(--g-line);background:var(--g-bg);color:var(--g-ink);font:600 16px "Barlow",system-ui,sans-serif;cursor:pointer}
+.gbtn svg{width:20px;height:20px}
+.gbtn:disabled{opacity:.6;cursor:default}
+.emailbox{margin-top:12px}
+.emailbox summary{font-size:14px}
 .setsec{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
 .setsec h4{font:700 17px "Barlow Condensed",sans-serif;margin:0 0 4px;letter-spacing:.02em}
 .setsec input{margin-top:6px}
@@ -477,12 +486,15 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
     <section class="setsec" id="syncSec" hidden>
       <h4>Account and sync</h4>
       <div id="syncOut">
-        <p class="hint" style="margin:0 0 4px">Sign in to back up your log and keep it the same on every device.</p>
+        <p class="hint" style="margin:0 0 4px">Sign in to back up your log automatically and keep it the same on your phone and laptop.</p>
+        <button type="button" class="gbtn" id="sGoogle"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</button>
+        <details class="emailbox" id="sEmailBox"><summary>Use email and password instead</summary>
         <label class="lbl" for="sEmail" style="margin-top:8px">Email</label>
         <input id="sEmail" type="email" autocomplete="email" autocapitalize="off" inputmode="email">
         <label class="lbl" for="sPass" style="margin-top:8px">Password</label>
         <input id="sPass" type="password" autocomplete="current-password" minlength="6">
         <div class="row"><button type="button" class="btn primary wide" id="sIn">Sign in</button><button type="button" class="btn ghost wide" id="sUp">Create account</button></div>
+        </details>
       </div>
       <div id="syncIn" hidden>
         <div class="syncline" id="syncLine"><i></i><span id="syncTxt">Syncing…</span></div>
@@ -1487,7 +1499,11 @@ function syncStore(){
   let meta={queue:{},primedFor:null,last:0};
   try{ meta={...meta,...JSON.parse(localStorage.getItem(SK)||"{}")}; }catch(e){}
   const persist=()=>{ try{ localStorage.setItem(K,JSON.stringify(state)); localStorage.setItem(SK,JSON.stringify(meta)); }catch(e){} };
-  const sb=window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {auth:{persistSession:true,autoRefreshToken:true,storageKey:"burnlog.auth"}});
+  const sb=window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce",storageKey:"burnlog.auth"}});
+  // coming back from Google: pick up any error, then tidy the address bar once supabase-js has read the code
+  const qs=new URLSearchParams(location.search), hs=new URLSearchParams(location.hash.slice(1));
+  const urlError=(qs.get("error_description")||hs.get("error_description")||qs.get("error")||hs.get("error")||"").replace(/\+/g," ");
+  const fromAuth=qs.has("code")||qs.has("error")||hs.has("access_token")||hs.has("error");
   const profileData=()=>Object.fromEntries(PROFILE_FIELDS.map(k=>[k,state[k]??null]));
   const enqueue=(kind,id,data)=>{ meta.queue[kind+":"+id]={kind,id,data}; };   // data null = delete
   let user=null, busy=null, again=false, kickT=null;
@@ -1550,9 +1566,14 @@ function syncStore(){
     if(user && meta.primedFor!==user.id) prime();
     if(!user) status.s="off";
     paintSync();
-    if(user && was!==user.id) sync();
+    if(user && was!==user.id){
+      sync();
+      let t=0; try{ t=+localStorage.getItem("burnlog.oauth")||0; localStorage.removeItem("burnlog.oauth"); }catch(e){}
+      if(t && Date.now()-t<15*60000) toast("Signed in", `${user.email||"Google account"} · your log now syncs`);
+    }
   }
-  sb.auth.getSession().then(({data})=>setUser(data?.session?.user)).catch(()=>{});
+  sb.auth.getSession().then(({data})=>setUser(data?.session?.user)).catch(()=>{})
+    .finally(()=>{ if(fromAuth) try{ history.replaceState(null,"",location.pathname); }catch(e){} });
   sb.auth.onAuthStateChange((ev,session)=>setTimeout(()=>setUser(session?.user),0));
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") sync(); });
   window.addEventListener("online",()=>sync());
@@ -1571,7 +1592,12 @@ function syncStore(){
       persist(); renderAll(); kick();
     },
     sync: {
-      status:()=>({...status,pending:pending(),email:user?.email||"",signedIn:!!user}),
+      status:()=>({...status,pending:pending(),email:user?.email||"",name:user?.user_metadata?.full_name||user?.user_metadata?.name||"",signedIn:!!user}),
+      urlError: fromAuth? urlError : "",
+      google: async ()=>{
+        const {error}=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname,queryParams:{prompt:"select_account"}}});
+        if(error) throw error;   // on success the page is already on its way to Google
+      },
       now:()=>sync(),
       signIn: async (email,password)=>{ const {error}=await sb.auth.signInWithPassword({email,password}); if(error) throw error; },
       signUp: async (email,password)=>{ const {data,error}=await sb.auth.signUp({email,password}); if(error) throw error; return !!data.session; },
@@ -1581,7 +1607,9 @@ function syncStore(){
 }
 async function initStore(){
   if(window.supabase && CFG.supabaseUrl && CFG.supabaseKey){
-    try{ store=syncStore(); renderAll(); renderLift(); return; }catch(e){ console.error(e); }
+    try{ store=syncStore(); renderAll(); renderLift();
+      if(store.sync.urlError){ const m=store.sync.urlError; setTimeout(()=>{ $("setBtn").click(); syncMsg(/denied|cancel/i.test(m)? "Google sign-in was cancelled." : "Google sign-in didn't finish: "+m); },300); }
+      return; }catch(e){ console.error(e); }
   }
   store=localStore(); renderAll(); renderLift();
   try{
@@ -1812,7 +1840,7 @@ function paintSync(){
   $("syncOut").hidden=st.signedIn; $("syncIn").hidden=!st.signedIn;
   btn.dataset.sync= !st.signedIn? "" : st.s==="err"? "err" : st.pending? "pending" : "ok";
   if(!st.signedIn) return;
-  $("syncEmail").textContent=st.email;
+  $("syncEmail").textContent= st.name? `${st.name} (${st.email})` : st.email;
   const line=$("syncLine"); line.dataset.s= st.s==="err"? "err" : st.pending? "pending" : "ok";
   const ago=st.at? Math.round((Date.now()-st.at)/60000) : null;
   $("syncTxt").textContent= st.s==="busy"? "Syncing…"
@@ -1835,6 +1863,15 @@ async function authGo(kind){
   finally{ b.disabled=false; b.textContent=label; paintSync(); }
 }
 $("sIn").onclick=()=>authGo("in"); $("sUp").onclick=()=>authGo("up");
+// Google sign-in: a full-page trip to Google and back. Google refuses sign-in inside the native iOS app's web view, so that build keeps email.
+$("sGoogle").hidden=NATIVE(); if(NATIVE()) $("sEmailBox").open=true;
+$("sGoogle").onclick=async()=>{
+  if(navigator.onLine===false) return syncMsg("You're offline. Connect to the internet to sign in.");
+  const b=$("sGoogle"); b.disabled=true; syncMsg("Opening Google…");
+  try{ localStorage.setItem("burnlog.oauth",String(Date.now())); }catch(e){}
+  try{ await store.sync.google(); }
+  catch(e){ b.disabled=false; syncMsg(/provider is not enabled/i.test(e?.message||"")? "Google sign-in isn't switched on in Supabase yet." : (e?.message||"Couldn't open Google sign-in. Try again.")); }
+};
 $("sNow").onclick=async()=>{ await store.sync.now(); paintSync(); };
 $("sOut").onclick=async()=>{
   const st=store.sync.status(), b=$("sOut");

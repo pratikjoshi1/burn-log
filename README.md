@@ -34,18 +34,38 @@ This repo pushes as `pratikjoshi1` through a repo-local credential helper (`gh a
    ```
 3. In Xcode, go to **Settings → Accounts** and add your Apple ID.
 
-## 2. Cloud sync (Supabase)
+## 2. Cloud sync (Supabase + Sign in with Google)
 
-1. Create a free project at https://supabase.com.
+**Supabase**
+1. At https://supabase.com, create a project (Free plan). Save the database password in a password manager; nothing in the app needs it.
 2. Go to **SQL Editor → New query**, paste `supabase/schema.sql`, and run it.
-3. Go to **Authentication → Sign In / Providers → Email** and turn off **Confirm email**. Otherwise the confirmation link opens an unused `localhost:3000` page. The account still gets confirmed, but the page looks broken.
-4. Copy `burnlog.config.example.json` to `burnlog.config.json` and fill in:
-   - **supabaseUrl**: Project Settings → Data API → Project URL
-   - **supabaseKey**: Project Settings → API Keys → the *publishable* key (or the legacy *anon public* key)
+3. Go to **Authentication → URL Configuration**:
+   - Site URL: `https://pratikjoshi1.github.io/burn-log/`
+   - Redirect URLs: add `https://pratikjoshi1.github.io/burn-log/**` (and `http://localhost:8080/**` for `npm run serve`)
+4. Open **Authentication → Sign In / Providers → Google** and copy its **Callback URL** (`https://<ref>.supabase.co/auth/v1/callback`).
 
-   Either key is safe to ship in the app. The row-level security policies only let each user read and write their own rows. Never use the `service_role` or secret key.
+**Google Cloud** (signed in with your personal Gmail)
+5. At https://console.cloud.google.com, create a project called "Burn Log".
+6. Go to **Google Auth Platform → Get started**:
+   - App name: Burn Log
+   - Support email: your Gmail
+   - Audience: External
+   - Then create it.
+7. Go to **Audience → Publish app**. Burn Log only asks for your name and email, so Google doesn't need to review it.
+8. Go to **Clients → Create client → Web application**:
+   - Authorized JavaScript origins: `https://pratikjoshi1.github.io`
+   - Authorized redirect URIs: the Supabase Callback URL from step 4
+   - Create it, then copy the **Client ID** and **Client secret**.
+9. Back in Supabase, open the **Google** provider, turn it on, paste the Client ID and Client secret, and save.
 
-Without `burnlog.config.json`, the app still works, but data stays on the phone only.
+**App config**
+10. Copy `burnlog.config.example.json` to `burnlog.config.json` and fill in:
+    - **supabaseUrl**: Project Settings → Data API → Project URL
+    - **supabaseKey**: Project Settings → API Keys → the *publishable* key
+
+    Then run `npm run deploy`. The publishable key is safe in the app, because row-level security limits each account to its own rows. Never put the Google client secret, the database password, or the Supabase secret/service_role key in the app.
+
+The native iOS build uses email and password, because Google blocks sign-in inside app web views.
 
 ## 3. Build and run on your iPhone
 
