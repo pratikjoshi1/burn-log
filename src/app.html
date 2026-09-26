@@ -254,6 +254,32 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
 .install div{flex:1}
 .install b{display:block;font-size:15px}
 .hapt{position:fixed;left:-100px;top:0;opacity:0;pointer-events:none}
+/* lifting burn */
+.burn{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.burn .k{font:800 46px/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;grid-row:span 2;min-width:92px}
+.burn .k small{font-size:15px;font-weight:700;color:var(--muted);margin-left:3px}
+.burn.live .k{color:var(--accent)}
+.burn .t{font:700 20px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.burn.live .t::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){ .burn.live .t::before{animation:blink 1.6s ease-in-out infinite} @keyframes blink{50%{opacity:.25}} }
+.burn .s{font-size:13px;color:var(--muted);line-height:1.3}
+.burn .eff{grid-column:1/-1;margin-top:10px}
+.burn .eff button{padding:8px 4px;font-size:14px;font-weight:600}
+.burn .lp{grid-column:1/-1;margin:10px 0 0}
+.wm-live{display:flex;justify-content:center;gap:16px;font:700 17px "Barlow Condensed",sans-serif;color:var(--muted);padding:0 16px 2px;font-variant-numeric:tabular-nums;min-height:22px}
+.wm-live b{color:var(--accent)}
+.wm-done .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 0;text-align:center}
+.wm-done .grid div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 4px}
+.wm-done .grid b{display:block;font:800 26px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.wm-done .grid span{font-size:12px;color:var(--muted)}
+.wm-done ul{margin:16px 0 0;text-align:left;font-size:14px}
+.wm-done li{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+.wm-done li span:last-child{color:var(--muted);white-space:nowrap}
+.flame{width:80px;height:80px;margin:0 auto 4px;display:block}
+@media (prefers-reduced-motion:no-preference){ .flame{animation:fl 1s cubic-bezier(.2,1.4,.4,1)} @keyframes fl{0%{transform:scale(.2) translateY(20px);opacity:0}100%{transform:none;opacity:1}} }
+.hist .kc{font:700 18px "Barlow Condensed",sans-serif;text-align:right;white-space:nowrap}
+.hist .kc small{display:block;font:500 12px "Barlow",sans-serif;color:var(--muted)}
+.hist li{grid-template-columns:1fr auto auto;align-items:center}
 /* phone additions */
 .when{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .when .seg{flex:1;min-width:0}
@@ -289,6 +315,11 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
 
   <!-- TODAY -->
   <section class="tab on" id="tab-today">
+    <div class="card install" id="bkNag" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+      <div><b>Back up your log</b><span id="bkNagTxt"></span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button class="btn primary small" id="bkNagGo" type="button">Back up</button><button class="btn ghost small" id="bkNagLater" type="button">Later</button></div>
+    </div>
     <div class="card install" id="installTip" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M5 11v9h14v-9"/></svg>
       <div><b>Put Burn Log on your Home Screen</b>Tap the Share button in Safari, then Add to Home Screen. It opens full-screen and works offline.</div>
@@ -379,7 +410,13 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
         <button class="btn ghost small" id="routBtn">Edit routine</button>
       </div>
     </header>
-    <div class="lp" aria-live="polite"><b id="lpTxt">0/0</b><span>sets done</span><span class="track"><span class="fill" id="lpFill" style="display:block;width:0"></span></span></div>
+    <div class="burn" id="burn">
+      <div class="k" id="burnK">0<small>kcal</small></div>
+      <div class="t" id="burnT">Not started</div>
+      <div class="s" id="burnS">The clock starts when you tick your first set.</div>
+      <div class="seg eff" role="group" aria-label="Effort" id="effSeg"><button type="button" data-e="light">Light</button><button type="button" data-e="moderate">Moderate</button><button type="button" data-e="hard">Hard</button></div>
+      <div class="lp" aria-live="polite"><b id="lpTxt">0/0</b><span>sets done</span><span class="track"><span class="fill" id="lpFill" style="display:block;width:0"></span></span></div>
+    </div>
     <div id="exList"></div>
     <button class="btn ghost" id="addExBtn" style="width:100%;margin-bottom:12px">＋ Add exercise to today</button>
     <div class="card">
@@ -421,10 +458,11 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
       <div class="review" id="review"></div>
     </div>
     <h2>Lifting sessions</h2>
+    <div class="stats" id="liftStats"></div>
     <ul class="hist" id="hist"></ul>
   </section>
 
-  <p class="note">Calories are estimates: MET × body weight (kg) × hours, with MET values from the Compendium of Physical Activities; cardio MET is picked from your pace when you give a distance. Estimated 1-rep max uses the Epley formula. Real numbers vary with fitness and effort.</p>
+  <p class="note">Calories are estimates: MET × body weight (kg) × hours, with MET values from the Compendium of Physical Activities; cardio MET is picked from your pace when you give a distance. Lifting uses MET 3.5 (light), 5.0 (moderate) or 6.0 (hard) for the time from your first set to saving. Estimated 1-rep max uses the Epley formula. Real numbers vary with fitness and effort.</p>
 </div>
 
 <nav class="tabs"><div class="in" role="tablist">
@@ -455,11 +493,14 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
     </section>
     <section class="setsec">
       <h4>Backup</h4>
-      <p class="hint" style="margin:0">A backup holds your weight, goals, routine, workouts and lifting sessions as text you can paste into another copy of Burn Log.</p>
-      <div class="row"><button type="button" class="btn ghost wide" id="bkCopy">Copy backup</button></div>
+      <div class="syncline" id="bkLine"><i></i><span id="bkLast">Last backup: never</span></div>
+      <p class="hint" style="margin:0">A backup holds your weight, goals, routine, workouts and lifting sessions. Save it to Files, iCloud Drive or Notes, and restore it into any copy of Burn Log.</p>
+      <div class="row"><button type="button" class="btn primary wide" id="bkFile" hidden>Save backup file</button><button type="button" class="btn ghost wide" id="bkCopy">Copy backup</button></div>
       <textarea id="bkOut" readonly hidden aria-label="Backup text"></textarea>
       <label class="lbl" for="bkIn" style="margin-top:12px">Restore from a backup</label>
-      <textarea id="bkIn" placeholder="Paste a backup here" autocapitalize="off" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:0"><button type="button" class="btn ghost wide" id="bkPickBtn">Choose backup file</button></div>
+      <input type="file" id="bkPick" accept=".json,application/json,text/plain" hidden>
+      <textarea id="bkIn" placeholder="…or paste a backup here" autocapitalize="off" spellcheck="false"></textarea>
       <div class="row"><button type="button" class="btn primary wide" id="bkRestore">Restore</button></div>
       <p class="hint">Restoring adds what's missing and skips entries you already have.</p>
       <p class="msg" id="bkMsg"></p>
@@ -527,6 +568,7 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
     <div class="wm-dots" id="wmDots"></div>
     <div class="useg" role="group" aria-label="Lifting unit"><button type="button" data-lu="kg">kg</button><button type="button" data-lu="lb">lb</button></div>
   </div>
+  <div class="wm-live" id="wmLive" aria-live="off"></div>
   <div class="wm-body" id="wmBody"></div>
   <div class="wm-foot" id="wmFoot">
     <button class="nav" id="wmPrev" aria-label="Previous exercise">‹</button>
@@ -874,7 +916,7 @@ function renderToday(){
   const start=dayStart(), weekAgo=start-6*864e5;
   const today=state.workouts.filter(w=>w.at>=start).reduce((s,w)=>s+w.kcal,0);
   const week=state.workouts.filter(w=>w.at>=weekAgo).reduce((s,w)=>s+w.kcal,0);
-  $("today").firstChild.nodeValue=today.toLocaleString();
+  countTo($("today"),today);
   $("week").textContent=week.toLocaleString();
   const days=[...Array(7)].map((_,i)=>start-(6-i)*864e5);
   const drawWeek=()=>barChart($("weekChart"), days.map((d,i)=>i===6?"Today":new Date(d).toLocaleDateString(undefined,{weekday:"short"})),
@@ -917,7 +959,7 @@ function renderToday(){
 const DRAFT="burnlog.draft2";
 // draft: {sets:{[name]:[{w,r,done}]}, extra:[{name,sets,lo,hi,side}]}
 let draft={sets:{},extra:[]};
-try{ const d=JSON.parse(localStorage.getItem(DRAFT)||"null"); if(d&&d.sets) draft={sets:d.sets,extra:d.extra||[],prs:d.prs||{},startedAt:d.startedAt||null}; }catch(e){}
+try{ const d=JSON.parse(localStorage.getItem(DRAFT)||"null"); if(d&&d.sets) draft={sets:d.sets,extra:d.extra||[],prs:d.prs||{},startedAt:d.startedAt||null,effort:d.effort||null}; }catch(e){}
 const saveDraft=()=>{ try{ localStorage.setItem(DRAFT,JSON.stringify(draft)); }catch(e){} };
 const wStep=()=> liftLb()? 5 : 2.5;
 function lastFor(name){
@@ -935,7 +977,36 @@ function updateProgressBar(){
   let done=0,total=0;
   todayList().forEach(ex=>{ const d=setsFor(ex); total+=d.length; done+=d.filter(x=>x.done).length; });
   $("lpTxt").textContent=`${done}/${total}`; $("lpFill").style.width=(total?done/total*100:0)+"%";
+  paintBurn();
 }
+// ---------- lifting calories ----------
+// MET for resistance training (Compendium of Physical Activities): 3.5 light, 5.0 moderate, 6.0 vigorous.
+// Default effort follows the rest timer: short rests keep the heart rate up.
+const EFFORT={light:{met:3.5,label:"Light"},moderate:{met:5.0,label:"Moderate"},hard:{met:6.0,label:"Hard"}};
+const effortKey=()=> EFFORT[draft.effort]? draft.effort : (restLen<=60?"hard":restLen<=90?"moderate":"light");
+const liftMet=()=>EFFORT[effortKey()].met;
+const liftMin=()=> draft.startedAt? (Date.now()-draft.startedAt)/60000 : 0;
+function fmtClock(m){ const t=Math.max(0,Math.floor(m*60)), h=Math.floor(t/3600), mm=Math.floor(t%3600/60), ss=t%60;
+  return (h? h+":"+String(mm).padStart(2,"0") : mm)+":"+String(ss).padStart(2,"0"); }
+const plannedMin=()=>{ let n=0; todayList().forEach(ex=>n+=setsFor(ex).length); return Math.round(n*2.5+5); };
+// minutes a saved session will record: typed value, else time since the first set, else the plan
+function sessionMinutes(){
+  const elapsed=draft.startedAt? Math.round((Date.now()-draft.startedAt)/60000) : 0;
+  return parseInt($("sessMin").value||(elapsed>=5&&elapsed<240? elapsed : plannedMin()),10);
+}
+function paintBurn(){
+  const on=!!draft.startedAt, kg=state.weightKg, met=liftMet(), k=on&&kg? kcal(met,kg,liftMin()) : 0;
+  $("burn").classList.toggle("live",on);
+  $("burnK").firstChild.nodeValue= !kg? "–" : on? String(k) : "≈"+kcal(met,kg,plannedMin());
+  $("burnT").textContent= on? fmtClock(liftMin()) : "Not started";
+  $("burnS").textContent= !kg? "Set your weight to see calories."
+    : on? `${EFFORT[effortKey()].label} effort, MET ${met}. About ${Math.round(met*kg/60*10)/10} kcal a minute.`
+    : `Estimate for about ${plannedMin()} min. The clock starts when you tick your first set.`;
+  document.querySelectorAll("#effSeg button").forEach(b=>{ const x=b.dataset.e===effortKey(); b.classList.toggle("on",x); b.setAttribute("aria-pressed",x); });
+  $("wmLive").innerHTML= on&&kg&&!wm.finished? `<span>${fmtClock(liftMin())}</span><span><b>${k}</b> kcal</span>` : "";
+}
+document.querySelectorAll("#effSeg button").forEach(b=>b.onclick=()=>{ draft.effort=b.dataset.e; saveDraft(); paintBurn(); buzz("light"); });
+setInterval(()=>{ if(draft.startedAt && ($("tab-lift").classList.contains("on")||$("wm").classList.contains("on"))) paintBurn(); },1000);
 function renderLift(){
   const list=$("exList"); list.textContent="";
   const exs=todayList(); let totalSets=0;
@@ -1063,6 +1134,7 @@ function goEx(delta,dir){
 }
 $("wmPrev").onclick=()=>goEx(-1); $("wmNext").onclick=()=>goEx(1);
 function renderWM(anim){
+  paintBurn();
   const list=todayList(), body=$("wmBody"), dots=$("wmDots");
   dots.textContent="";
   list.forEach((ex,i)=>{ const b=document.createElement("button"); const d=setsFor(ex);
@@ -1071,10 +1143,17 @@ function renderWM(anim){
   body.textContent=""; body.className="wm-body"+(anim?" slide-"+anim:"");
   if(wm.finished){
     const done=list.reduce((a,e)=>a+setsFor(e).filter(x=>x.done).length,0), prs=Object.keys(draft.prs||{});
-    const mins=draft.startedAt? Math.max(1,Math.round((Date.now()-draft.startedAt)/60000)) : null;
-    body.innerHTML=`<div class="wm-done"><div class="num">${done}</div><div class="wm-sub">sets done${mins?` in ${mins} min`:""}</div>
-      ${prs.length?`<p style="margin-top:18px;font-weight:600">🏆 ${prs.length} PR${prs.length>1?"s":""}: ${prs.map(esc).join(", ")}</p>`:""}
-      <p class="hint" style="margin-top:18px">Save to add this session to your log and progress.</p></div>`;
+    const mins=sessionMinutes(), kg=state.weightKg, total=kg? kcal(liftMet(),kg,mins) : 0;
+    const doneSets=list.map(e=>({e,sets:setsFor(e).filter(x=>x.done)})).filter(x=>x.sets.length);
+    const vol=doneSets.reduce((a,x)=>a+x.sets.reduce((b,y)=>b+fromDispW(+y.w||0)*(+y.r||0),0),0);
+    const rows=doneSets.map(x=>`<li><span>${esc(x.e.name)}</span><span>${x.sets.length} set${x.sets.length>1?"s":""}${kg&&done?` · ≈${Math.round(total*x.sets.length/done)} kcal`:""}</span></li>`).join("");
+    body.innerHTML=`<div class="wm-done">
+      <svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1.2 4 6 6.3 6 11.5a6 6 0 0 1-12 0c0-2.5 1.2-4.4 2.5-5.6.3 1.9 1.2 3.1 2.4 3.7 0-3.5 0-6.3 1.1-9.6z" fill="var(--accent)"/><path d="M12 12c.6 2 3 3 3 5.2a3 3 0 0 1-6 0c0-1.2.6-2.2 1.3-2.8.2.9.6 1.5 1.2 1.8 0-1.7 0-2.8.5-4.2z" fill="var(--bg)" opacity=".75"/></svg>
+      <div class="num">${kg? total : done}</div><div class="wm-sub">${kg? `kcal burned · ${EFFORT[effortKey()].label.toLowerCase()} effort` : "sets done"}</div>
+      <div class="grid"><div><b>${done}</b><span>sets</span></div><div><b>${mins}</b><span>minutes</span></div><div><b>${Math.round(toDispW(vol)).toLocaleString()}</b><span>${LU()} lifted</span></div></div>
+      ${prs.length?`<p style="margin-top:16px;font-weight:600">🏆 ${prs.length} PR${prs.length>1?"s":""}: ${prs.map(esc).join(", ")}</p>`:""}
+      <ul>${rows}</ul>
+      <p class="hint" style="margin-top:14px">Save to add this session to your log and progress. Per-exercise calories split the total by sets.</p></div>`;
     $("wmGo").textContent="Save workout"; $("wmPrev").disabled=false; $("wmNext").disabled=true;
     return;
   }
@@ -1127,7 +1206,7 @@ function advanceWM(){
   if(nextSet>=0){ wm.set=nextSet; renderWM(); return; }
   for(let e=wm.ex+1;e<list.length;e++){ const s=setsFor(list[e]).findIndex(x=>!x.done); if(s>=0){ wm.ex=e; wm.set=s; renderWM("l"); return; } }
   const f=firstOpen(); if(f){ wm={...f,finished:false}; renderWM("l"); return; }
-  wm.finished=true; renderWM("l");
+  wm.finished=true; renderWM("l"); buzz("success");
 }
 $("wmGo").onclick=async()=>{
   if(wm.finished){ closeWM(); $("sessSave").click(); return; }
@@ -1187,7 +1266,7 @@ function beep(n=3){
       o.connect(g).connect(actx.destination); o.start(t); o.stop(t+0.18); } }catch(e){}
 }
 function paintRestSeg(){ document.querySelectorAll("#restSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===restLen)); }
-document.querySelectorAll("#restSeg button").forEach(b=>b.onclick=()=>{ restLen=+b.dataset.r; try{localStorage.setItem("burnlog.rest",restLen)}catch(e){} paintRestSeg(); });
+document.querySelectorAll("#restSeg button").forEach(b=>b.onclick=()=>{ restLen=+b.dataset.r; try{localStorage.setItem("burnlog.rest",restLen)}catch(e){} paintRestSeg(); paintBurn(); });
 paintRestSeg();
 function paintRest(){
   const left=Math.round((restEnd-Date.now())/1000), el=$("rest");
@@ -1219,16 +1298,16 @@ $("sessSave").onclick=async()=>{
     if(sets.length) exercises.push({name:ex.name,lo:ex.lo,hi:ex.hi,side:!!ex.side,sets});
   }
   if(!exercises.length){ $("liftMsg").textContent="Fill in weight and reps for at least one set."; return; }
-  const elapsed=draft.startedAt? Math.round((Date.now()-draft.startedAt)/60000)+2 : 0;
-  const min=parseInt($("sessMin").value||(elapsed>=5&&elapsed<240?elapsed:$("sessMin").placeholder),10);
-  const prCount=Object.keys(draft.prs||{}).length;
-  const nSets=exercises.reduce((a,e)=>a+e.sets.length,0), met=METS["Weight training (general)"], at=Date.now();
+  const min=sessionMinutes();
+  const prCount=Object.keys(draft.prs||{}).length, eff=EFFORT[effortKey()];
+  const nSets=exercises.reduce((a,e)=>a+e.sets.length,0), met=eff.met, at=Date.now(), burned=kcal(met,state.weightKg,min);
   const btn=$("sessSave"); btn.disabled=true;
   try{
-    const sid=await store.add("sessions",{at,durationMin:min,exercises});
-    await store.add("workouts",{exercise:"Strength session",minutes:min,met,kcal:kcal(met,state.weightKg,min),detail:`${exercises.length} exercises, ${nSets} sets`,at,sessionId:sid});
+    const sid=await store.add("sessions",{at,durationMin:min,met,exercises});
+    await store.add("workouts",{exercise:"Strength session",minutes:min,met,kcal:burned,detail:`${exercises.length} exercises, ${nSets} sets, ${eff.label.toLowerCase()} effort`,at,sessionId:sid});
     draft={sets:{},extra:[]}; saveDraft(); stopRest(); $("sessMin").value=""; $("liftMsg").textContent="";
-    toast("Workout saved", `${nSets} sets${prCount?` · ${prCount} PR${prCount>1?"s":""}`:""} · ${min} min`);
+    toast(`Workout saved · ${burned} kcal`, `${nSets} sets${prCount?` · ${prCount} PR${prCount>1?"s":""}`:""} · ${min} min`);
+    checkGoal();
     renderLift(); document.querySelector('nav button[data-tab="progress"]').click();
   }catch(e){ $("liftMsg").textContent="Couldn't save the session. Try again."; }
   finally{ btn.disabled=false; }
@@ -1325,16 +1404,24 @@ function renderProgress(){
   // history
   const hi=$("hist"); hi.textContent="";
   const ss=[...state.sessions].sort((a,b)=>b.at-a.at).slice(0,20);
+  const kOf=s=>state.workouts.find(w=>w.sessionId===s.id)?.kcal||0;
+  const wkS=state.sessions.filter(s=>s.at>=weekStart(Date.now())), wkK=wkS.reduce((a,s)=>a+kOf(s),0);
+  const allK=state.sessions.map(kOf).filter(Boolean);
+  $("liftStats").innerHTML= state.sessions.length? `<div class="stat"><b>${wkS.length}</b><span>sessions this week</span></div>
+    <div class="stat"><b>${wkK.toLocaleString()}</b><span>kcal lifting this week</span></div>
+    <div class="stat"><b>${allK.length? Math.round(allK.reduce((a,b)=>a+b,0)/allK.length) : "–"}</b><span>avg kcal a session</span></div>` : "";
   if(!ss.length){ hi.innerHTML=`<li class="empty" style="display:block;border:0">No lifting sessions yet.</li>`; }
   ss.forEach(s=>{
     const li=document.createElement("li");
     const a=document.createElement("div");
     a.innerHTML=`<div style="font-weight:600">${esc(dayKey(s.at))}</div><div class="meta">${(s.exercises||[]).map(e=>esc(e.name)+" "+e.sets.map(x=>toDispW(x.kg)+"×"+x.reps).join("/")).join(" · ")}</div>`;
+    const kc=document.createElement("div"); kc.className="kc"; const sk=kOf(s);
+    kc.innerHTML= sk? `${sk}<small>kcal · ${s.durationMin||"?"} min</small>` : `<small>${s.durationMin||"?"} min</small>`;
     const d=document.createElement("button"); d.className="del"; d.textContent="×"; d.setAttribute("aria-label","Delete session from "+dayKey(s.at));
     d.onclick=async()=>{ const w=state.workouts.find(w=>w.sessionId===s.id);
       if(w) return deleteEntry(w,s);
       await store.remove("sessions",s.id); toast("Deleted session","","var(--ink)",()=>store.add("sessions",strip(s))); };
-    li.append(a,d); hi.append(li);
+    li.append(a,kc,d); hi.append(li);
   });
 }
 let exSel=null;
@@ -1370,7 +1457,7 @@ function renderAll(){
   if(typeof paintLU==="function") paintLU();
   $("wtBtn").textContent = state.weightKg ? (isLb()? Math.round(state.weightKg*LB)+" lb" : Math.round(state.weightKg*10)/10+" kg") : "Set weight";
   document.querySelectorAll(".du").forEach(e=>e.textContent=du());
-  renderToday(); renderQuick();
+  renderToday(); renderQuick(); if(typeof renderBackupNag==="function") renderBackupNag();
   if($("tab-lift").classList.contains("on") && !$("exList").contains(document.activeElement)) renderLift();
   if($("tab-progress").classList.contains("on")) renderProgress();
   cPreview();
@@ -1380,6 +1467,7 @@ function localStore(){
   try{ const s=JSON.parse(localStorage.getItem(K)||"null"); if(s) state={...state,...s,sessions:s.sessions||[]}; }catch(e){}
   const persist=()=>{ try{ localStorage.setItem(K,JSON.stringify(state)); }catch(e){} };
   return {
+    kind:"local",
     saveProfile: async p=>{ Object.assign(state,p); persist(); renderAll(); },
     add: async (c,w)=>{ const id=newId(c[0]); state[c].push({...w,id}); persist(); renderAll(); return id; },
     remove: async (c,id)=>{ state[c]=state[c].filter(w=>w.id!==id); persist(); renderAll(); },
@@ -1471,6 +1559,7 @@ function syncStore(){
   setInterval(()=>{ if(document.visibilityState==="visible") sync(); },60000);
 
   return {
+    get kind(){ return user? "sync" : "local"; },
     saveProfile: async p=>{ Object.assign(state,p); enqueue("profile","me",profileData()); persist(); renderAll(); kick(); },
     add: async (c,w)=>{ const id=newId(c[0]), row={...w,id}; state[c].push(row); enqueue(c,id,strip(row)); persist(); renderAll(); kick(); return id; },
     remove: async (c,id)=>{ state[c]=state[c].filter(x=>x.id!==id); enqueue(c,id,null); persist(); renderAll(); kick(); },
@@ -1509,6 +1598,7 @@ async function initStore(){
         e=>say("Couldn't load your data ("+e.code+")."));
     }
     store={
+      kind:"claude",
       saveProfile: async pr=>{ Object.assign(state,pr); renderAll(); await profile.set({weightKg:state.weightKg,unit:state.unit,liftUnit:LU(),routine:state.routine,goalDays:state.goalDays,goalKcal:state.goalKcal}); },
       add: async (c,w)=>(await cols[c].add(w)).id,
       remove: async (c,id)=>{ await cols[c].doc(id).delete(); },
@@ -1523,7 +1613,28 @@ async function initStore(){
   }catch(e){}
 }
 function say(t){ $("msg").textContent=t||""; }
-function flash(){ const t=$("today"); t.classList.remove("pulse"); void t.offsetWidth; t.classList.add("pulse"); }
+function flash(){ const t=$("today"); t.classList.remove("pulse"); void t.offsetWidth; t.classList.add("pulse"); checkGoal(); }
+// animate the kcal-today number when it changes
+let shownToday=null, countRaf=0;
+function countTo(el,to){
+  const from=shownToday; shownToday=to; cancelAnimationFrame(countRaf);
+  let still=true; try{ still=matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  if(from==null||from===to||still){ el.firstChild.nodeValue=to.toLocaleString(); return; }
+  const t0=performance.now(), dur=650;
+  const step=t=>{ const q=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-q,3);
+    el.firstChild.nodeValue=Math.round(from+(to-from)*e).toLocaleString(); if(q<1) countRaf=requestAnimationFrame(step); };
+  countRaf=requestAnimationFrame(step);
+}
+// cheer once a week when the active-days goal is reached (only right after you log something)
+function checkGoal(){
+  const ws=weekStart(Date.now()), g=state.goalDays||3, act=activeDays(ws,ws+7*864e5);
+  let seen=0; try{ seen=+localStorage.getItem("burnlog.goalCheer")||0; }catch(e){}
+  if(act>=g && seen!==ws){
+    try{ localStorage.setItem("burnlog.goalCheer",String(ws)); }catch(e){}
+    const st=streakWeeks();
+    setTimeout(()=>{ toast("Weekly goal hit!", `${act} active days this week${st>1?` · ${st}-week streak`:""}`); buzz("success"); },900);
+  }
+}
 
 // ---------- weight dialog ----------
 let dlgUnit="kg";
@@ -1709,7 +1820,7 @@ function paintSync(){
     : st.pending? `${st.pending} change${st.pending>1?"s":""} waiting to upload`
     : ago==null? "Synced" : ago<1? "Synced just now" : `Synced ${ago} min ago`;
 }
-$("setBtn").onclick=()=>{ $("bkOut").hidden=true; $("bkMsg").textContent=""; $("syncMsg").textContent=""; $("sOut").textContent="Sign out"; paintSync(); $("setDlg").showModal(); };
+$("setBtn").onclick=()=>{ $("bkOut").hidden=true; $("bkMsg").textContent=""; $("syncMsg").textContent=""; $("sOut").textContent="Sign out"; paintSync(); paintBackup(); $("setDlg").showModal(); };
 const syncMsg=t=>{ $("syncMsg").textContent=t||""; };
 async function authGo(kind){
   const email=$("sEmail").value.trim(), pw=$("sPass").value;
@@ -1739,7 +1850,7 @@ function backupText(){
 }
 $("bkCopy").onclick=async()=>{
   const t=backupText(), n=state.workouts.length+state.sessions.length, out=$("bkOut");
-  try{ await navigator.clipboard.writeText(t); $("bkMsg").textContent=`Copied a backup of ${n} entries. Paste it into Restore in the other copy of Burn Log.`; out.hidden=true; }
+  try{ await navigator.clipboard.writeText(t); markBackup(); $("bkMsg").textContent=`Copied a backup of ${n} entries. Paste it into Notes, or into Restore in another copy of Burn Log.`; out.hidden=true; }
   catch(e){ out.value=t; out.hidden=false; out.focus(); out.select(); $("bkMsg").textContent="Copy is blocked here. The backup is selected below: tap Copy on it."; }
 };
 function planRestore(b){
@@ -1754,8 +1865,8 @@ function planRestore(b){
   if(state.weightKg && profile.weightKg && Math.abs(state.weightKg-profile.weightKg)<0.01) delete profile.weightKg;
   return {profile,sessions,workouts};
 }
-$("bkRestore").onclick=async()=>{
-  const raw=$("bkIn").value.trim(), msg=$("bkMsg");
+async function restoreFrom(raw){
+  const msg=$("bkMsg"); raw=(raw||"").trim();
   if(!raw){ msg.textContent="Paste a backup into the box first."; return; }
   let b; try{ b=JSON.parse(raw); }catch(e){ msg.textContent="That text isn't a Burn Log backup. Copy the whole backup and paste it again."; return; }
   if(!b||b.app!=="burn-log"||!Array.isArray(b.workouts)){ msg.textContent="That text isn't a Burn Log backup. Copy the whole backup and paste it again."; return; }
@@ -1765,7 +1876,48 @@ $("bkRestore").onclick=async()=>{
     buzz("success"); renderLift();
   }catch(e){ msg.textContent="Couldn't finish the restore. Try again; entries already added won't be duplicated."; }
   finally{ btn.disabled=false; btn.textContent="Restore"; }
+}
+$("bkRestore").onclick=()=>restoreFrom($("bkIn").value);
+$("bkPickBtn").onclick=()=>$("bkPick").click();
+$("bkPick").onchange=async()=>{
+  const f=$("bkPick").files[0]; $("bkPick").value=""; if(!f) return;
+  if(f.size>20e6){ $("bkMsg").textContent="That file is too big to be a Burn Log backup."; return; }
+  try{ await restoreFrom(await f.text()); }catch(e){ $("bkMsg").textContent="Couldn't read that file. Pick the .json backup file."; }
 };
+// when the last backup was made (this device)
+const lastBackup=()=>{ try{ return +localStorage.getItem("burnlog.lastBackup")||0; }catch(e){ return 0; } };
+function markBackup(){ try{ localStorage.setItem("burnlog.lastBackup",String(Date.now())); }catch(e){} paintBackup(); }
+function agoText(t){ if(!t) return "never"; const d=Math.round((dayStart()-dayOf(t))/864e5); return d<=0?"today":d===1?"yesterday":d+" days ago"; }
+function paintBackup(){
+  const t=lastBackup(), old=!t || Date.now()-t>7*864e5, kind=store?.kind;
+  $("bkLast").textContent= kind==="sync"? `Also saved to your account. Last backup file: ${agoText(t)}`
+    : kind==="claude"? `Saved in Claude. Last backup: ${agoText(t)}` : `Last backup: ${agoText(t)}`;
+  $("bkLine").dataset.s= kind!=="local"||!old? "ok" : "err";
+  renderBackupNag();
+}
+function renderBackupNag(){
+  const n=state.workouts.length+state.sessions.length, t=lastBackup();
+  let snooze=0; try{ snooze=+localStorage.getItem("burnlog.bkSnooze")||0; }catch(e){}
+  const show= store?.kind==="local" && n>=3 && (!t || Date.now()-t>7*864e5) && Date.now()>snooze;
+  $("bkNag").hidden=!show;
+  if(show) $("bkNagTxt").textContent= t? ` Your last backup was ${agoText(t)}. Your workouts live only on this device.` : ` Your ${n} entries live only on this device. Save a backup so a new phone or cleared Safari data can't erase them.`;
+}
+$("bkNagGo").onclick=()=>{ $("setBtn").click(); setTimeout(()=>($("bkFile").hidden? $("bkCopy") : $("bkFile")).focus(),60); };
+$("bkNagLater").onclick=()=>{ try{ localStorage.setItem("burnlog.bkSnooze",String(Date.now()+3*864e5)); }catch(e){} renderBackupNag(); };
+// a real file only on the web link; the Claude viewer blocks downloads, so it keeps Copy backup
+const CAN_FILE = !!window.BURNLOG_CONFIG && !NATIVE();
+$("bkFile").hidden=!CAN_FILE;
+function ymdLocal(t){ const d=new Date(t); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+$("bkFile").onclick=async()=>{
+  const name=`burn-log-backup-${ymdLocal(Date.now())}.json`, text=backupText(), msg=$("bkMsg");
+  const file=new File([text],name,{type:"application/json"});
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file],title:"Burn Log backup"});
+    else { const a=document.createElement("a"); a.href=URL.createObjectURL(file); a.download=name; document.body.append(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000); }
+    markBackup(); msg.textContent=`Saved ${name}. Keep it in Files or iCloud Drive.`;
+  }catch(e){ if(e?.name!=="AbortError") msg.textContent="Couldn't save the file. Use Copy backup instead."; }
+};
+if(CAN_FILE && navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{});
 
 // Home Screen tip: only on the web link in iPhone Safari, until dismissed
 try{ if(window.BURNLOG_CONFIG && navigator.standalone===false && !NATIVE() && localStorage.getItem("burnlog.installTip")!=="0") $("installTip").hidden=false; }catch(e){}
