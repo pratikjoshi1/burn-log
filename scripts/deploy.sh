@@ -5,7 +5,6 @@ set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 node scripts/build.mjs
-REMOTE="$(git remote get-url origin)"
 NAME="$(git config user.name)"; EMAIL="$(git config user.email)"
 TMP="$(mktemp -d)"
 cp -R www/. "$TMP"/
@@ -14,6 +13,9 @@ cd "$TMP"
 git init -q -b gh-pages
 git add -A
 git -c user.name="$NAME" -c user.email="$EMAIL" commit -q --no-gpg-sign -m "Deploy Burn Log $(date +%Y-%m-%d\ %H:%M)"
-git push -q -f "$REMOTE" gh-pages
-cd "$ROOT" && rm -rf "$TMP"
+cd "$ROOT"
+# push from this repo so its own credential settings (the pratikjoshi1 account) apply
+git fetch -q -f "$TMP" gh-pages:gh-pages
+git push -q -f origin gh-pages
+rm -rf "$TMP"
 echo "Deployed. GitHub Pages updates in about a minute."
