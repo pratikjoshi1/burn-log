@@ -24,7 +24,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent;
   font:400 16px/1.5 "Barlow",system-ui,-apple-system,"Segoe UI",sans-serif}
-.wrap{max-width:560px;margin:0 auto;padding:16px 16px calc(var(--navh) + 40px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px calc(var(--navh) + 96px + env(safe-area-inset-bottom,0px))}
 button{touch-action:manipulation}
 h1,h2,h3,.num{font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -289,6 +289,41 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
 .hist .kc{font:700 18px "Barlow Condensed",sans-serif;text-align:right;white-space:nowrap}
 .hist .kc small{display:block;font:500 12px "Barlow",sans-serif;color:var(--muted)}
 .hist li{grid-template-columns:1fr auto auto;align-items:center}
+/* log sheet + floating button */
+.fab{position:fixed;z-index:14;right:max(16px,calc(50% - 264px));bottom:calc(var(--navh) + 14px + env(safe-area-inset-bottom,0px));
+  display:none;align-items:center;gap:6px;height:54px;padding:0 22px 0 16px;border:0;border-radius:27px;background:var(--accent);color:var(--accent-ink);
+  font:700 20px "Barlow Condensed",sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;
+  box-shadow:0 8px 20px rgba(229,52,29,.35),0 2px 6px rgba(0,0,0,.18)}
+.fab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+body.on-today .fab{display:flex}
+body.kb .fab{display:none}
+body.resting .fab{bottom:calc(var(--navh) + 100px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:no-preference){ .fab{transition:transform .15s} .fab:active{transform:scale(.95)} }
+.sheethead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sheethead h3{font-size:22px}
+.sheethead .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--ink);font-size:22px;cursor:pointer}
+.logsheet .quick{margin:0 -16px 14px;padding:0 16px}
+.logsheet{width:min(520px,92vw)}
+.mins button{min-height:44px}
+.wkempty{position:relative;margin:4px 0 0}
+.wkempty .ghost{display:flex;align-items:flex-end;gap:10px;height:96px;padding:0 2px}
+.wkempty .ghost i{flex:1;background:var(--soft);border-radius:5px;opacity:.7}
+.wkempty p{position:absolute;inset:0;display:grid;place-items:center;margin:0;text-align:center;color:var(--muted);font-size:14px;padding:0 20px}
+.log .chev{color:var(--muted);font-size:22px;line-height:1;padding-left:2px}
+.emptycta{text-align:center;padding:26px 0;color:var(--muted)}
+.emptycta .btn{margin-top:10px}
+.more{width:100%;margin-top:14px}
+.danger{color:var(--accent)}
+/* welcome */
+.weldots{display:flex;gap:6px;justify-content:center;margin:2px 0 16px}
+.weldots i{width:28px;height:5px;border-radius:3px;background:var(--line)}
+.weldots i.on{background:var(--accent)}
+.welh{font-size:26px;font-weight:800;margin:0 0 4px}
+.daypick{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:8px 0 4px}
+.daypick button{height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:700 20px "Barlow Condensed",sans-serif;cursor:pointer}
+.daypick button.on,.welk button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.welskip{position:absolute;top:14px;right:16px;background:none;border:0;color:var(--muted);font:500 14px "Barlow",sans-serif;cursor:pointer;padding:6px}
+#welDlg{position:fixed}
 /* phone additions */
 .when{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .when .seg{flex:1;min-width:0}
@@ -324,11 +359,6 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
 
   <!-- TODAY -->
   <section class="tab on" id="tab-today">
-    <div class="card install" id="bkNag" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
-      <div><b>Back up your log</b><span id="bkNagTxt"></span></div>
-      <div style="display:flex;flex-direction:column;gap:6px"><button class="btn primary small" id="bkNagGo" type="button">Back up</button><button class="btn ghost small" id="bkNagLater" type="button">Later</button></div>
-    </div>
     <div class="card install" id="installTip" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M5 11v9h14v-9"/></svg>
       <div><b>Put Burn Log on your Home Screen</b>Tap the Share button in Safari, then Add to Home Screen. It opens full-screen and works offline.</div>
@@ -349,61 +379,15 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
     </div>
     <svg class="chart" id="weekChart" viewBox="0 0 350 120" role="img"></svg>
     <div class="detail" id="dayDetail"></div>
+    <div class="card install" id="bkNag" style="margin-top:14px" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+      <div><b>Back up your log</b><span id="bkNagTxt"></span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button class="btn primary small" id="bkNagGo" type="button">Back up</button><button class="btn ghost small" id="bkNagLater" type="button">Later</button></div>
+    </div>
 
-    <div class="card" style="margin-top:16px">
-      <div class="when">
-        <div class="seg" role="group" aria-label="Log for which day" id="whenSeg">
-          <button type="button" data-w="0" class="on">Today</button><button type="button" data-w="1">Yesterday</button><button type="button" data-w="pick">Earlier</button>
-        </div>
-        <input type="date" id="whenDate" aria-label="Date to log for" hidden>
-      </div>
-      <div id="quickWrap" hidden>
-        <p class="qlbl">Log again</p>
-        <div class="quick" id="quick"></div>
-      </div>
-      <label for="txt" class="lbl">What did you do?</label>
-      <textarea id="txt" placeholder="e.g. ran 5 km in 28 min, avg HR 152"></textarea>
-      <div class="row"><button class="btn primary wide" id="logBtn">Log workout</button></div>
-      <div class="row">
-        <button class="btn ghost small wide" data-panel="cardioPanel" aria-expanded="false">Add cardio</button>
-        <button class="btn ghost small wide" data-panel="steps" aria-expanded="false">Add steps</button>
-        <button class="btn ghost small wide" data-panel="manual" aria-expanded="false">Pick from list</button>
-      </div>
-
-      <div class="panel" id="cardioPanel">
-        <div class="full"><label class="lbl" for="cType">Activity</label><select id="cType"></select></div>
-        <div class="full"><label class="lbl" for="cMin">Minutes</label><input id="cMin" type="number" min="1" inputmode="numeric">
-          <div class="mins" data-for="cMin"><button type="button">10</button><button type="button">20</button><button type="button">30</button><button type="button">45</button><button type="button">60</button></div></div>
-        <div><label class="lbl" for="cDist">Distance (<span class="du">km</span>)</label><input id="cDist" type="number" min="0" step="0.01" inputmode="decimal"></div>
-        <div><label class="lbl" for="cHr">Avg heart rate</label><input id="cHr" type="number" min="40" max="230" inputmode="numeric" placeholder="optional"></div>
-        <div><label class="lbl" for="cNote">Notes</label><input id="cNote" maxlength="60" placeholder="incline, intervals…"></div>
-        <p class="hint full" id="cPrev" style="margin:0"></p>
-        <button class="btn primary full" id="cAdd">Add cardio</button>
-      </div>
-
-      <div class="panel" id="steps">
-        <div class="full"><label class="lbl" for="stepIn">Steps today</label><input id="stepIn" type="number" min="1" inputmode="numeric" placeholder="e.g. 8000"></div>
-        <button class="btn primary full" id="stepAdd">Add steps</button>
-        <details class="full">
-          <summary>Pull steps from Apple Health with a Shortcut</summary>
-          <p style="margin:6px 0">Web pages can't read Apple Health directly, so an iOS Shortcut copies today's count for you:</p>
-          <ol>
-            <li>Open Shortcuts, create a new shortcut.</li>
-            <li>Add <b>Find Health Samples</b>: Type is Steps, Start Date is Today.</li>
-            <li>Add <b>Calculate Statistics</b>: Sum.</li>
-            <li>Add <b>Round Number</b>, then <b>Copy to Clipboard</b>.</li>
-            <li>Run it, then long-press the steps box here and choose Paste. The number is cleaned up for you.</li>
-          </ol>
-        </details>
-      </div>
-
-      <div class="panel" id="manual">
-        <select id="exSel" aria-label="Exercise"></select>
-        <input id="exMin" type="number" min="1" inputmode="numeric" placeholder="minutes" aria-label="Minutes">
-        <div class="mins full" data-for="exMin"><button type="button">15</button><button type="button">30</button><button type="button">45</button><button type="button">60</button><button type="button">90</button></div>
-        <button class="btn primary full" id="manAdd">Add exercise</button>
-      </div>
-      <div class="msg" id="msg" role="status"></div>
+    <div class="wkempty" id="weekEmpty" hidden>
+      <div class="ghost" aria-hidden="true"><i style="height:38%"></i><i style="height:62%"></i><i style="height:30%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:25%"></i><i style="height:56%"></i></div>
+      <p>Your week shows up here once you log a workout.</p>
     </div>
 
     <div class="log" id="log"></div>
@@ -471,7 +455,7 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
     <ul class="hist" id="hist"></ul>
   </section>
 
-  <p class="note">Calories are estimates: MET × body weight (kg) × hours, with MET values from the Compendium of Physical Activities; cardio MET is picked from your pace when you give a distance. Lifting uses MET 3.5 (light), 5.0 (moderate) or 6.0 (hard) for the time from your first set to saving. Estimated 1-rep max uses the Epley formula. Real numbers vary with fitness and effort.</p>
+
 </div>
 
 <nav class="tabs"><div class="in" role="tablist">
@@ -479,6 +463,93 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
   <button role="tab" aria-selected="false" data-tab="lift"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>Lift</button>
   <button role="tab" aria-selected="false" data-tab="progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M5 15l4-4 3 3 7-7M15 7h4v4"/></svg>Progress</button>
 </div></nav>
+
+<dialog id="logDlg" class="logsheet" aria-labelledby="logT">
+  <div class="sheethead"><h3 id="logT">Log a workout</h3><button type="button" class="x" id="logX" aria-label="Close">×</button></div>
+      <div class="when">
+        <div class="seg" role="group" aria-label="Log for which day" id="whenSeg">
+          <button type="button" data-w="0" class="on">Today</button><button type="button" data-w="1">Yesterday</button><button type="button" data-w="pick">Earlier</button>
+        </div>
+        <input type="date" id="whenDate" aria-label="Date to log for" hidden>
+      </div>
+      <div id="quickWrap" hidden>
+        <p class="qlbl">Log again</p>
+        <div class="quick" id="quick"></div>
+      </div>
+      <label for="txt" class="lbl">What did you do?</label>
+      <textarea id="txt" placeholder="e.g. ran 5 km in 28 min, avg HR 152"></textarea>
+      <div class="row"><button class="btn primary wide" id="logBtn">Log workout</button></div>
+      <div class="row">
+        <button class="btn ghost small wide" data-panel="cardioPanel" aria-expanded="false">Add cardio</button>
+        <button class="btn ghost small wide" data-panel="steps" aria-expanded="false">Add steps</button>
+        <button class="btn ghost small wide" data-panel="manual" aria-expanded="false">Pick from list</button>
+      </div>
+
+      <div class="panel" id="cardioPanel">
+        <div class="full"><label class="lbl" for="cType">Activity</label><select id="cType"></select></div>
+        <div class="full"><label class="lbl" for="cMin">Minutes</label><input id="cMin" type="number" min="1" inputmode="numeric">
+          <div class="mins" data-for="cMin"><button type="button">10</button><button type="button">20</button><button type="button">30</button><button type="button">45</button><button type="button">60</button></div></div>
+        <div><label class="lbl" for="cDist">Distance (<span class="du">km</span>)</label><input id="cDist" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        <div><label class="lbl" for="cHr">Avg heart rate</label><input id="cHr" type="number" min="40" max="230" inputmode="numeric" placeholder="optional"></div>
+        <div><label class="lbl" for="cNote">Notes</label><input id="cNote" maxlength="60" placeholder="incline, intervals…"></div>
+        <p class="hint full" id="cPrev" style="margin:0"></p>
+        <button class="btn primary full" id="cAdd">Add cardio</button>
+      </div>
+
+      <div class="panel" id="steps">
+        <div class="full"><label class="lbl" for="stepIn">Steps today</label><input id="stepIn" type="number" min="1" inputmode="numeric" placeholder="e.g. 8000"></div>
+        <button class="btn primary full" id="stepAdd">Add steps</button>
+        <details class="full">
+          <summary>Pull steps from Apple Health with a Shortcut</summary>
+          <p style="margin:6px 0">Web pages can't read Apple Health directly, so an iOS Shortcut copies today's count for you:</p>
+          <ol>
+            <li>Open Shortcuts, create a new shortcut.</li>
+            <li>Add <b>Find Health Samples</b>: Type is Steps, Start Date is Today.</li>
+            <li>Add <b>Calculate Statistics</b>: Sum.</li>
+            <li>Add <b>Round Number</b>, then <b>Copy to Clipboard</b>.</li>
+            <li>Run it, then long-press the steps box here and choose Paste. The number is cleaned up for you.</li>
+          </ol>
+        </details>
+      </div>
+
+      <div class="panel" id="manual">
+        <select id="exSel" aria-label="Exercise"></select>
+        <input id="exMin" type="number" min="1" inputmode="numeric" placeholder="minutes" aria-label="Minutes">
+        <div class="mins full" data-for="exMin"><button type="button">15</button><button type="button">30</button><button type="button">45</button><button type="button">60</button><button type="button">90</button></div>
+        <button class="btn primary full" id="manAdd">Add exercise</button>
+      </div>
+      <div class="msg" id="msg" role="status"></div>
+</dialog>
+
+<button type="button" class="fab" id="fab" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Log</button>
+
+<dialog id="welDlg" aria-labelledby="welT">
+  <div class="weldots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+  <section id="wel1">
+    <h3 class="welh" id="welT">Welcome to Burn Log</h3>
+    <p class="hint" style="margin:0 0 12px">Log workouts, track your lifting and see what you burn. Calories are worked out from your body weight.</p>
+    <label class="lbl" for="welW">Your weight</label>
+    <div class="row" style="margin-top:0;flex-wrap:nowrap"><input id="welW" type="number" min="20" step="0.1" inputmode="decimal" placeholder="e.g. 78" style="flex:1">
+      <div class="seg" role="group" aria-label="Unit" id="welU"><button type="button" data-u="kg" class="on">kg</button><button type="button" data-u="lb">lb</button></div></div>
+    <p class="msg" id="welMsg"></p>
+    <div class="row"><button type="button" class="btn primary wide" id="welNext1">Next</button></div>
+  </section>
+  <section id="wel2" hidden>
+    <h3 class="welh">Your weekly goal</h3>
+    <p class="hint" style="margin:0">How many days a week do you want to be active?</p>
+    <div class="daypick" id="welDays" role="group" aria-label="Active days per week"></div>
+    <p class="hint" style="margin:14px 0 0">Calories to burn each week (optional)</p>
+    <div class="mins welk" id="welK" role="group" aria-label="Weekly calorie goal"><button type="button" data-k="0" class="on">None</button><button type="button" data-k="1500">1,500</button><button type="button" data-k="2500">2,500</button><button type="button" data-k="3500">3,500</button></div>
+    <div class="row"><button type="button" class="btn ghost" id="welBack2">Back</button><button type="button" class="btn primary wide" id="welNext2">Next</button></div>
+  </section>
+  <section id="wel3" hidden>
+    <h3 class="welh">Keep your log safe</h3>
+    <p class="hint" style="margin:0" id="welSyncTxt">Sign in with Google to back up automatically and see the same log on your phone and laptop.</p>
+    <button type="button" class="gbtn" id="welGoogle"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</button>
+    <div class="row"><button type="button" class="btn ghost wide" id="welDone">Not now</button></div>
+  </section>
+  <button type="button" class="welskip" id="welSkipAll">Skip</button>
+</dialog>
 
 <dialog id="setDlg">
   <form method="dialog" id="setForm">
@@ -517,6 +588,7 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
       <p class="hint">Restoring adds what's missing and skips entries you already have.</p>
       <p class="msg" id="bkMsg"></p>
     </section>
+    <details class="setsec"><summary>How calories are estimated</summary><p class="hint" style="margin-top:8px">Calories are estimates: MET × body weight (kg) × hours, with MET values from the Compendium of Physical Activities; cardio MET is picked from your pace when you give a distance. Lifting uses MET 3.5 (light), 5.0 (moderate) or 6.0 (hard) for the time from your first set to saving. Estimated 1-rep max uses the Epley formula. Real numbers vary with fitness and effort.</p></details>
     <div class="row"><button class="btn ghost wide" value="cancel" formnovalidate>Close</button></div>
   </form>
 </dialog>
@@ -544,7 +616,7 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
     <label for="edName">Exercise</label><input id="edName" maxlength="60" required>
     <div id="edTimeRow">
       <label for="edMin">Minutes</label><input id="edMin" type="number" min="1" inputmode="numeric">
-      <label for="edMet">MET value</label><input id="edMet" type="number" min="1" step="0.1" inputmode="decimal">
+      <label for="edMet">Intensity (MET)</label><input id="edMet" type="number" min="1" step="0.1" inputmode="decimal">
     </div>
     <div id="edCardioRow">
       <label for="edDist">Distance (<span class="du">km</span>)</label><input id="edDist" type="number" min="0" step="0.01" inputmode="decimal">
@@ -556,6 +628,7 @@ dialog label{font-weight:600;font-size:14px;display:block;margin-top:10px}
       <button class="btn ghost wide" value="cancel" formnovalidate>Cancel</button>
       <button class="btn primary wide" value="ok">Save changes</button>
     </div>
+    <div class="row"><button type="button" class="btn ghost wide danger" id="edDel">Delete entry</button></div>
   </form>
 </dialog>
 
@@ -720,6 +793,7 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.id==="tab-"+b.dataset.tab));
   try{ localStorage.setItem("burnlog.tab",b.dataset.tab); }catch(e){}
+  document.body.classList.toggle("on-today",b.dataset.tab==="today");
   window.scrollTo(0,0);
   renderAll();
 });
@@ -752,6 +826,19 @@ function webTick(){
     _hapt.click(); }catch(e){}
 }
 const newId = p => p+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+document.body.classList.add("on-today");
+$("fab").onclick=()=>{ buzz("light"); openLog(); };
+$("logX").onclick=()=>$("logDlg").close();
+// sheets: tap outside to close, or drag the handle down (not the welcome screen)
+document.querySelectorAll("dialog").forEach(d=>{
+  if(d.id==="welDlg") return;
+  d.addEventListener("click",e=>{ if(e.target!==d) return; const r=d.getBoundingClientRect();
+    if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom) d.close("cancel"); });
+  let y0=null;
+  d.addEventListener("touchstart",e=>{ const r=d.getBoundingClientRect(), t=e.touches[0]; y0= (t.clientY-r.top<44 && innerWidth<=600)? t.clientY : null; },{passive:true});
+  d.addEventListener("touchmove",e=>{ if(y0==null) return; const dy=Math.max(0,e.touches[0].clientY-y0); d.style.transform=`translateY(${dy}px)`; },{passive:true});
+  d.addEventListener("touchend",e=>{ if(y0==null) return; const dy=e.changedTouches[0].clientY-y0; y0=null; d.style.transform=""; if(dy>80) d.close("cancel"); },{passive:true});
+});
 // hide the bottom bar while the phone keyboard is up
 const isField = el => el && (el.tagName==="TEXTAREA"||el.tagName==="SELECT"||(el.tagName==="INPUT"&&!/^(checkbox|radio|button)$/.test(el.type)));
 document.addEventListener("focusin",e=>{ if(isField(e.target)) document.body.classList.add("kb"); });
@@ -934,14 +1021,22 @@ function renderToday(){
   const drawWeek=()=>barChart($("weekChart"), days.map((d,i)=>i===6?"Today":new Date(d).toLocaleDateString(undefined,{weekday:"short"})),
     days.map(a=>state.workouts.filter(w=>w.at>=a&&w.at<a+864e5).reduce((s,w)=>s+w.kcal,0)), 6,
     i=>{ daySel = daySel===i? null : i; drawWeek(); showDay(daySel==null?null:days[i]); }, daySel);
+  const anyWeek=days.some(a=>state.workouts.some(w=>w.at>=a&&w.at<a+864e5));
+  $("weekChart").style.display= anyWeek? "" : "none"; $("weekEmpty").hidden=anyWeek;
   drawWeek(); showDay(daySel==null?null:days[daySel]);
   renderGoals();
 
   const log=$("log"); log.textContent="";
-  if(!state.workouts.length){ const p=document.createElement("p"); p.className="empty"; p.textContent="No workouts yet. Describe one above to log it."; log.append(p); return; }
-  const groups={};
-  [...state.workouts].sort((a,b)=>b.at-a.at).slice(0,120).forEach(w=>(groups[dayKey(w.at)] ||= []).push(w));
-  for(const [day,items] of Object.entries(groups)){
+  if(!state.workouts.length){
+    const e=document.createElement("div"); e.className="emptycta";
+    e.innerHTML=`<div>No workouts yet.</div><button class="btn primary" type="button">＋ Log your first workout</button>`;
+    e.querySelector("button").onclick=openLog; log.append(e); return; }
+  // this week in full, older weeks on request (always at least the 3 most recent days)
+  const groups=[];
+  [...state.workouts].sort((a,b)=>b.at-a.at).forEach(w=>{ const a=dayOf(w.at), g=groups[groups.length-1];
+    if(g&&g.a===a) g.items.push(w); else groups.push({a,day:dayKey(w.at),items:[w]}); });
+  const cutoff=start-(histDays-1)*864e5, shown=groups.filter((g,i)=>g.a>=cutoff||i<3), hidden=groups.slice(shown.length);
+  for(const {day,items} of shown){
     const h=document.createElement("h2"); h.textContent=day;
     const s=document.createElement("span"); s.textContent=items.reduce((a,w)=>a+w.kcal,0).toLocaleString()+" kcal"; h.append(s); log.append(h);
     const ul=document.createElement("ul");
@@ -954,18 +1049,23 @@ function renderToday(){
       else { const bits=[`${w.minutes} min`];
         if(w.cardio?.distanceKm) bits.push(fmtD(w.cardio.distanceKm), paceStr(w.minutes,w.cardio.distanceKm));
         if(w.cardio?.avgHr) bits.push(`${w.cardio.avgHr} bpm`);
-        if(!w.cardio) bits.push(`MET ${w.met}`);
         if(w.detail) bits.push(w.detail);
         m.textContent=bits.filter(Boolean).join(" · "); }
       a.append(n,m);
       const k=document.createElement("div"); k.className="kcal"; k.innerHTML=`${w.kcal} <small>kcal</small>`;
-      const d=document.createElement("button"); d.className="del"; d.textContent="×"; d.setAttribute("aria-label","Delete "+w.exercise);
-      d.onclick=()=>deleteEntry(w);
-      li.append(a,k,d); ul.append(li);
+      k.onclick=()=>openEdit(w);
+      const c=document.createElement("span"); c.className="chev"; c.setAttribute("aria-hidden","true"); c.textContent="›"; c.onclick=()=>openEdit(w);
+      li.append(a,k,c); ul.append(li);
     });
     log.append(ul);
   }
+  if(hidden.length){
+    const n=hidden.reduce((x,g)=>x+g.items.length,0), more=document.createElement("button");
+    more.type="button"; more.className="btn ghost more"; more.textContent=`Show earlier weeks (${n} entr${n===1?"y":"ies"})`;
+    more.onclick=()=>{ histDays+=14; renderToday(); }; log.append(more);
+  }
 }
+let histDays=7;
 
 // ---------- LIFT (interactive) ----------
 const DRAFT="burnlog.draft2";
@@ -1429,11 +1529,15 @@ function renderProgress(){
     a.innerHTML=`<div style="font-weight:600">${esc(dayKey(s.at))}</div><div class="meta">${(s.exercises||[]).map(e=>esc(e.name)+" "+e.sets.map(x=>toDispW(x.kg)+"×"+x.reps).join("/")).join(" · ")}</div>`;
     const kc=document.createElement("div"); kc.className="kc"; const sk=kOf(s);
     kc.innerHTML= sk? `${sk}<small>kcal · ${s.durationMin||"?"} min</small>` : `<small>${s.durationMin||"?"} min</small>`;
-    const d=document.createElement("button"); d.className="del"; d.textContent="×"; d.setAttribute("aria-label","Delete session from "+dayKey(s.at));
-    d.onclick=async()=>{ const w=state.workouts.find(w=>w.sessionId===s.id);
-      if(w) return deleteEntry(w,s);
-      await store.remove("sessions",s.id); toast("Deleted session","","var(--ink)",()=>store.add("sessions",strip(s))); };
-    li.append(a,kc,d); hi.append(li);
+    const lw=state.workouts.find(w=>w.sessionId===s.id);
+    if(lw){ li.style.cursor="pointer"; li.tabIndex=0; li.setAttribute("role","button"); li.setAttribute("aria-label","Edit session from "+dayKey(s.at));
+      li.onclick=()=>openEdit(lw); li.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openEdit(lw); } };
+      const c=document.createElement("span"); c.className="chev"; c.style.cssText="color:var(--muted);font-size:22px"; c.textContent="›"; c.setAttribute("aria-hidden","true");
+      li.append(a,kc,c); }
+    else { const d=document.createElement("button"); d.className="del"; d.textContent="×"; d.setAttribute("aria-label","Delete session from "+dayKey(s.at));
+      d.onclick=async()=>{ await store.remove("sessions",s.id); toast("Deleted session","","var(--ink)",()=>store.add("sessions",strip(s))); };
+      li.append(a,kc,d); }
+    hi.append(li);
   });
 }
 let exSel=null;
@@ -1607,11 +1711,11 @@ function syncStore(){
 }
 async function initStore(){
   if(window.supabase && CFG.supabaseUrl && CFG.supabaseKey){
-    try{ store=syncStore(); renderAll(); renderLift();
+    try{ store=syncStore(); renderAll(); renderLift(); setTimeout(maybeWelcome,600);
       if(store.sync.urlError){ const m=store.sync.urlError; setTimeout(()=>{ $("setBtn").click(); syncMsg(/denied|cancel/i.test(m)? "Google sign-in was cancelled." : "Google sign-in didn't finish: "+m); },300); }
       return; }catch(e){ console.error(e); }
   }
-  store=localStore(); renderAll(); renderLift();
+  store=localStore(); renderAll(); renderLift(); setTimeout(maybeWelcome,600);
   try{
     const [db,user]=await Promise.all([use("db"),use("user")]);
     const uid=user && await user.id();
@@ -1641,7 +1745,8 @@ async function initStore(){
   }catch(e){}
 }
 function say(t){ $("msg").textContent=t||""; }
-function flash(){ const t=$("today"); t.classList.remove("pulse"); void t.offsetWidth; t.classList.add("pulse"); checkGoal(); }
+function flash(){ if($("logDlg").open) $("logDlg").close(); const t=$("today"); t.classList.remove("pulse"); void t.offsetWidth; t.classList.add("pulse"); checkGoal(); }
+function openLog(){ say(""); $("logDlg").showModal(); }
 // animate the kcal-today number when it changes
 let shownToday=null, countRaf=0;
 function countTo(el,to){
@@ -1768,6 +1873,7 @@ function openEdit(w){
   editPreview(); $("edDlg").showModal();
 }
 ["edMin","edMet","edSteps","edDist"].forEach(id=>$(id).addEventListener("input",editPreview));
+$("edDel").onclick=()=>{ const w=editing; editing=null; $("edDlg").close("cancel"); if(w) deleteEntry(w); };
 $("edDlg").addEventListener("close",async()=>{
   if($("edDlg").returnValue!=="ok"||!editing) return;
   const w=editing; editing=null;
@@ -1955,6 +2061,45 @@ $("bkFile").onclick=async()=>{
   }catch(e){ if(e?.name!=="AbortError") msg.textContent="Couldn't save the file. Use Copy backup instead."; }
 };
 if(CAN_FILE && navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{});
+
+// ---------- first launch: weight, weekly goal, sign-in ----------
+let welU="kg", welDays=3, welK=0;
+function welStep(n){ [1,2,3].forEach(i=>$("wel"+i).hidden=i!==n); document.querySelectorAll(".weldots i").forEach((d,i)=>d.classList.toggle("on",i<n)); }
+function welDone(){ try{ localStorage.setItem("burnlog.welcome","1"); }catch(e){} $("welDlg").close(); }
+function maybeWelcome(){
+  let seen=true; try{ seen=localStorage.getItem("burnlog.welcome")==="1" || !!localStorage.getItem("burnlog.auth"); }catch(e){}
+  if(seen || !window.BURNLOG_CONFIG || store?.kind!=="local" || state.weightKg || state.workouts.length || state.sessions.length) return;
+  const days=$("welDays"); days.textContent="";
+  for(let i=1;i<=7;i++){ const b=document.createElement("button"); b.type="button"; b.textContent=i; b.classList.toggle("on",i===welDays);
+    b.setAttribute("aria-label",i+" day"+(i>1?"s":"")+" a week");
+    b.onclick=()=>{ welDays=i; days.querySelectorAll("button").forEach((x,j)=>x.classList.toggle("on",j===i-1)); buzz("light"); }; days.append(b); }
+  const sync=!!store.sync;
+  $("welGoogle").hidden=!sync || NATIVE();
+  $("welSyncTxt").textContent= sync&&!NATIVE()? "Sign in with Google to back up automatically and see the same log on your phone and laptop."
+    : sync? "Open Settings (the gear) to sign in, so your log is backed up and the same on every device."
+    : "Your log is saved on this device. Save a backup now and then from Settings (the gear).";
+  $("welDone").textContent= sync&&!NATIVE()? "Not now" : "Start logging";
+  welStep(1); $("welDlg").showModal();
+}
+document.querySelectorAll("#welU button").forEach(b=>b.onclick=()=>{ const v=parseFloat($("welW").value);
+  if(v && b.dataset.u!==welU) $("welW").value=Math.round((b.dataset.u==="lb"? v*LB : v/LB)*10)/10;
+  welU=b.dataset.u; document.querySelectorAll("#welU button").forEach(x=>x.classList.toggle("on",x===b)); });
+$("welNext1").onclick=async()=>{
+  const v=parseFloat($("welW").value), kg= welU==="lb"? v/LB : v;
+  if(!(kg>=25&&kg<=300)){ $("welMsg").textContent="Enter your weight, for example 78 kg or 172 lb."; $("welW").focus(); return; }
+  $("welMsg").textContent=""; await store.saveProfile({weightKg:Math.round(kg*10)/10,unit:welU}); welStep(2);
+};
+document.querySelectorAll("#welK button").forEach(b=>b.onclick=()=>{ welK=+b.dataset.k; document.querySelectorAll("#welK button").forEach(x=>x.classList.toggle("on",x===b)); });
+$("welBack2").onclick=()=>welStep(1);
+$("welNext2").onclick=async()=>{ await store.saveProfile({goalDays:welDays,goalKcal:welK}); welStep(3); };
+$("welDone").onclick=()=>{ welDone(); toast("You're set", "Tap ＋ Log to add your first workout."); };
+$("welSkipAll").onclick=welDone;
+$("welGoogle").onclick=async()=>{
+  try{ localStorage.setItem("burnlog.welcome","1"); localStorage.setItem("burnlog.oauth",String(Date.now())); }catch(e){}
+  $("welGoogle").disabled=true;
+  try{ await store.sync.google(); }catch(e){ $("welGoogle").disabled=false; $("welSyncTxt").textContent="Couldn't open Google sign-in. You can try again later from Settings."; }
+};
+$("welDlg").addEventListener("cancel",e=>e.preventDefault());   // Escape doesn't skip setup by accident
 
 // Home Screen tip: only on the web link in iPhone Safari, until dismissed
 try{ if(window.BURNLOG_CONFIG && navigator.standalone===false && !NATIVE() && localStorage.getItem("burnlog.installTip")!=="0") $("installTip").hidden=false; }catch(e){}
