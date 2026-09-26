@@ -1,0 +1,4 @@
+{
+  "supabaseUrl": "https://YOUR-PROJECT-REF.supabase.co",
+  "supabaseKey": "sb_publishable_... (or the anon public key)"
+}

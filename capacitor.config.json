@@ -1,0 +1,10 @@
+{
+  "appId": "com.pratikjoshi.burnlog",
+  "appName": "Burn Log",
+  "webDir": "www",
+  "backgroundColor": "#13203A",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#13203A"
+  }
+}
